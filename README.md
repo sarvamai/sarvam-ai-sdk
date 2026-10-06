@@ -1,5 +1,5 @@
 <a href="https://github.com/sarvamai/sarvam-ai-sdk">
-    <img alt="cover" src="https://github.com/sarvamai/sarvam-ai-sdk/blob/master/cover.png?raw=true" />
+    <img alt="cover" src="./cover.png?raw=true" />
 </a>
 
 # AI SDK - Sarvam Provider
