@@ -2,52 +2,61 @@
 	"name": "sarvam-ai-sdk",
 	"type": "module",
 	"description": "Sarvam provider support for Vercel's AI-SDK",
-	"version": "0.3.1",
-	"main": "./dist/index.cjs",
+	"version": "0.4.6",
+	"main": "./dist/index.js",
 	"module": "./dist/index.js",
 	"types": "./dist/index.d.ts",
 	"files": [
 		"dist/**/*"
 	],
 	"scripts": {
+		"prepublishOnly": "bun run build",
+		"pack": "bun pm pack --filename package.tgz",
 		"build": "tsdown",
 		"build:watch": "tsdown --watch",
-		"type-check": "tsc --noEmit",
-		"check": "biome check",
-		"test": "tsx --env-file=.env test/index.ts",
-		"test:integration": "npm test --prefix published-integration-test"
+		"check": "tsc --noEmit",
+		"test": "bun test"
 	},
 	"exports": {
 		"./package.json": "./package.json",
 		".": {
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js",
-			"require": "./dist/index.cjs"
+			"default": "./dist/index.js"
+		},
+		"./info": {
+			"types": "./dist/info.d.ts",
+			"import": "./dist/info.js",
+			"default": "./dist/info.js"
 		}
 	},
 	"dependencies": {
-		"@ai-sdk/provider": "^3.0.0",
-		"@ai-sdk/provider-utils": "^4.0.0"
+		"@ai-sdk/provider": "^4.0.0",
+		"@ai-sdk/provider-utils": "^5.0.0"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.4.8",
 		"@types/node": "20.17.24",
-		"ai": "^6.0.0",
-		"sarvam-ai-sdk": "file:.",
+		"ai": "^7.0.0",
 		"tsdown": "^0.15.10",
 		"tsx": "^4.21.0",
 		"typescript": "5.6.3",
 		"zod": "^4.1.8"
 	},
 	"peerDependencies": {
-		"ai": "^6.0.0",
+		"ai": "^7.0.0",
 		"zod": "^3.25.0 || ^4.0.0"
 	},
 	"engines": {
-		"node": ">=18"
+		"node": ">=22"
 	},
 	"publishConfig": {
+		"provenance": false,
 		"access": "public"
+	},
+	"author": {
+		"name": "Sarvam AI",
+		"url": "https://sarvam.ai"
 	},
 	"repository": {
 		"type": "git",
@@ -56,12 +65,14 @@
 	"bugs": {
 		"url": "https://github.com/sarvamai/sarvam-ai-sdk/issues"
 	},
-	"homepage": "https://docs.sarvam.ai",
+	"homepage": "https://docs.sarvam.ai/api/integration/vercel-ai-sdk",
 	"keywords": [
 		"ai",
 		"ai-sdk",
+		"eve",
+		"vercel",
 		"sarvam",
 		"india",
-		"ai4bharat"
+		"bharat"
 	]
 }

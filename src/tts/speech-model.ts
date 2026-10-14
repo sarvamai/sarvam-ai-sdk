@@ -1,4 +1,4 @@
-import type { SpeechModelV3, SpeechModelV3CallOptions } from "@ai-sdk/provider";
+import type { SpeechModelV4, SpeechModelV4CallOptions } from "@ai-sdk/provider";
 import {
 	combineHeaders,
 	createJsonResponseHandler,
@@ -25,8 +25,8 @@ interface SpeechModelConfig extends SarvamConfig {
 	speech?: SpeechSettings;
 }
 
-export class SarvamSpeechModel implements SpeechModelV3 {
-	readonly specificationVersion = "v3";
+export class SarvamSpeechModel implements SpeechModelV4 {
+	readonly specificationVersion = "v4";
 
 	get provider(): string {
 		return this.config.provider;
@@ -43,7 +43,7 @@ export class SarvamSpeechModel implements SpeechModelV3 {
 	) {}
 
 	private async getArgs(
-		options: SpeechModelV3CallOptions & { stream: boolean },
+		options: SpeechModelV4CallOptions & { stream: boolean },
 	) {
 		const {
 			text,
@@ -91,8 +91,8 @@ export class SarvamSpeechModel implements SpeechModelV3 {
 	}
 
 	async doGenerate(
-		options: SpeechModelV3CallOptions,
-	): Promise<Awaited<ReturnType<SpeechModelV3["doGenerate"]>>> {
+		options: SpeechModelV4CallOptions,
+	): Promise<Awaited<ReturnType<SpeechModelV4["doGenerate"]>>> {
 		const currentDate = this.config._internal?.currentDate?.() ?? new Date();
 		const { requestBody, warnings } = await this.getArgs({
 			...options,
@@ -108,7 +108,7 @@ export class SarvamSpeechModel implements SpeechModelV3 {
 				path: "/text-to-speech",
 				modelId: this.modelId,
 			}),
-			headers: combineHeaders(this.config.headers(), options.headers),
+			headers: combineHeaders(this.config.headers?.(), options.headers),
 			body: requestBody,
 			failedResponseHandler: sarvamFailedResponseHandler,
 			successfulResponseHandler:

@@ -1,7 +1,7 @@
 import type {
-	LanguageModelV3,
-	LanguageModelV3CallOptions,
-	LanguageModelV3Content,
+	LanguageModelV4,
+	LanguageModelV4CallOptions,
+	LanguageModelV4Content,
 } from "@ai-sdk/provider";
 import {
 	combineHeaders,
@@ -19,8 +19,8 @@ import {
 } from "./translation-settings";
 import { convertPromptToInput } from "./utils";
 
-export class SarvamTranslationModel implements LanguageModelV3 {
-	readonly specificationVersion = "v3";
+export class SarvamTranslationModel implements LanguageModelV4 {
+	readonly specificationVersion = "v4";
 
 	readonly modelId: TranslationModelId;
 	readonly settings: TranslationSettings;
@@ -46,7 +46,7 @@ export class SarvamTranslationModel implements LanguageModelV3 {
 	}
 
 	private async getArgs(
-		options: LanguageModelV3CallOptions & {
+		options: LanguageModelV4CallOptions & {
 			stream: boolean;
 		},
 	) {
@@ -65,8 +65,7 @@ export class SarvamTranslationModel implements LanguageModelV3 {
 
 		if (!sarvamOptions) throw new Error("Translation Settings is not provided");
 
-		const from = sarvamOptions.from ?? "auto";
-		const to = sarvamOptions.to;
+		const { from = "auto", to, ...restOptions } = sarvamOptions;
 
 		if (from === to) {
 			throw new Error("Source and target languages code must be different.");
@@ -87,7 +86,7 @@ export class SarvamTranslationModel implements LanguageModelV3 {
 			args: {
 				input: convertPromptToInput(prompt),
 				model: this.modelId,
-				...sarvamOptions,
+				...restOptions,
 				source_language_code: from,
 				target_language_code: to,
 			},
@@ -96,8 +95,8 @@ export class SarvamTranslationModel implements LanguageModelV3 {
 	}
 
 	async doGenerate(
-		options: LanguageModelV3CallOptions,
-	): Promise<Awaited<ReturnType<LanguageModelV3["doGenerate"]>>> {
+		options: LanguageModelV4CallOptions,
+	): Promise<Awaited<ReturnType<LanguageModelV4["doGenerate"]>>> {
 		const { args } = await this.getArgs({
 			...options,
 			stream: false,
@@ -112,7 +111,7 @@ export class SarvamTranslationModel implements LanguageModelV3 {
 				path: "/translate",
 				modelId: this.modelId,
 			}),
-			headers: combineHeaders(this.config.headers(), options.headers),
+			headers: combineHeaders(this.config.headers?.(), options.headers),
 			body: args,
 			failedResponseHandler: sarvamFailedResponseHandler,
 			successfulResponseHandler: createJsonResponseHandler(
@@ -124,7 +123,7 @@ export class SarvamTranslationModel implements LanguageModelV3 {
 
 		const translatedText = response.translated_text ?? "";
 
-		const content: LanguageModelV3Content[] = [
+		const content: LanguageModelV4Content[] = [
 			{ type: "text", text: translatedText },
 		];
 
@@ -164,8 +163,8 @@ export class SarvamTranslationModel implements LanguageModelV3 {
 	}
 
 	async doStream(
-		_options: LanguageModelV3CallOptions,
-	): Promise<Awaited<ReturnType<LanguageModelV3["doStream"]>>> {
+		_options: LanguageModelV4CallOptions,
+	): Promise<Awaited<ReturnType<LanguageModelV4["doStream"]>>> {
 		throw new Error("Translation feature doesn't support streaming yet");
 	}
 }

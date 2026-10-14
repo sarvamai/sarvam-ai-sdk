@@ -4,7 +4,7 @@ import { z } from "zod";
 export type SarvamConfig = {
 	provider: string;
 	url: (options: { modelId: string; path: string }) => string;
-	headers: () => Record<string, string | undefined>;
+	headers?: () => Record<string, string | undefined>;
 	fetch?: FetchFunction;
 	generateId?: () => string;
 };
@@ -76,11 +76,10 @@ export interface SarvamProviderSettings {
 	apiKey?: string;
 
 	/**
-	 * Custom headers to include in the requests (merged with defaults; can override e.g. User-Agent).
+	 * Custom headers to include in the requests.
 	 * @default
 	 * Authorization: `Bearer ${process.env.SARVAM_API_KEY}`,
-	 * "api-subscription-key": process.env.SARVAM_API_KEY,
-	 * "User-Agent": "sarvam-vercel-sdk"
+	 * "api-subscription-key": process.env.SARVAM_API_KEY
 	 */
 	headers?: Record<string, string>;
 

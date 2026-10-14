@@ -1,6 +1,5 @@
 import { loadApiKey, withoutTrailingSlash } from "@ai-sdk/provider-utils";
 import { SarvamChatLanguageModel } from "./chat/language-model";
-import type { ChatModelId, ChatSettings } from "./chat/settings";
 import type { SarvamProviderSettings } from "./config";
 import { SarvamTranscriptionModel } from "./stt/transcription-model";
 import { SarvamSpeechModel } from "./tts/speech-model";
@@ -10,7 +9,7 @@ import { SarvamTransliterateModel } from "./ttt/transliterate-model";
 import type { SarvamProvider } from "./type";
 
 /**
- * Create an Sarvam provider instance.
+ * Create a Sarvam provider instance.
  */
 export function createSarvam(options: SarvamProviderSettings = {}) {
 	const baseURL =
@@ -28,22 +27,24 @@ export function createSarvam(options: SarvamProviderSettings = {}) {
 		return {
 			Authorization: `Bearer ${apiKey}`,
 			"api-subscription-key": apiKey,
-			"User-Agent": "sarvam-vercel-sdk",
 			...options.headers,
 		};
 	};
 
-	const createChatModel = (modelId: ChatModelId, settings: ChatSettings = {}) =>
+	const createChatModel: SarvamProvider["chat"] = (modelId, settings = {}) =>
 		new SarvamChatLanguageModel(modelId, settings, {
 			provider: "sarvam.chat",
-			url: ({ path }) => `${baseURL}/v1${path}`,
+			url: ({ path }) => {
+				if (settings.version === "v2") return `${baseURL}/v2${path}`;
+				return `${baseURL}/v1${path}`;
+			},
 			headers: getHeaders,
 			fetch: options.fetch,
 		});
 
-	const createLanguageModel = (
-		modelId: ChatModelId,
-		settings?: ChatSettings,
+	const createLanguageModel: SarvamProvider["languageModel"] = (
+		modelId,
+		settings,
 	) => {
 		if (new.target) {
 			throw new Error(

@@ -1,57 +1,12 @@
 import { z } from "zod";
+import type { SarvamLanguageCode } from "@/config";
+import type { Includes } from "@/utils";
+import type { GetSpeakerVoicesType, SpeakersType } from "./speech-config";
 
 /**
  * Specifies the speech generation model to use.
- *
- * - `bulbul:v3`: Latest model with improved quality, 30+ voices, and temperature control
  */
-export type SpeechModelId = "bulbul:v3" | (string & {});
-
-export const SpeakerSchema = z.enum([
-	// male
-	"shubh",
-	"aditya",
-	"rahul",
-	"rohan",
-	"amit",
-	"dev",
-	"ratan",
-	"varun",
-	"manan",
-	"sumit",
-	"kabir",
-	"aayan",
-	"ashutosh",
-	"advait",
-	"anand",
-	"tarun",
-	"sunny",
-	"mani",
-	"gokul",
-	"vijay",
-	"mohit",
-	"rehan",
-	"soham",
-	// female
-	"ritu",
-	"priya",
-	"neha",
-	"pooja",
-	"simran",
-	"kavya",
-	"ishita",
-	"shreya",
-	"roopa",
-	"amelia",
-	"sophia",
-	"tanya",
-	"shruti",
-	"suhani",
-	"kavitha",
-	"rupali",
-]);
-
-export type SarvamSpeechVoices = z.infer<typeof SpeakerSchema>;
+export type SpeechModelId = "bulbul:v3" | "bulbul:v4-flash" | (string & {});
 
 export const outputAudioCodecSchema = z.enum([
 	"mp3",
@@ -67,7 +22,7 @@ export const outputAudioCodecSchema = z.enum([
 // https://docs.sarvam.ai/api-reference-docs/text-to-speech/convert
 export const speechOptionsSchema = z
 	.object({
-		speaker: SpeakerSchema,
+		speaker: z.string().transform((val) => (val === "" ? undefined : val)),
 		pace: z.number().min(0.5).max(2.0),
 		speech_sample_rate: z.union([
 			z.literal(8000),
@@ -88,15 +43,18 @@ export const speechOptionsSchema = z
  * Configuration settings for Sarvam Text-to-Speech API (bulbul:v3).
  */
 export type SpeechSettings<
-	// biome-ignore lint/correctness/noUnusedVariables: <For Future Models>
 	T extends SpeechModelId = SpeechModelId,
+	L extends SarvamLanguageCode = SarvamLanguageCode,
 > = {
 	/**
 	 * The speaker voice to be used for the output audio.
 	 *
-	 * @default "shubh"
+	 * @default "shubh" for v3
+	 * @default "shubh_enhi_ads" for v4
 	 */
-	speaker?: z.infer<typeof SpeakerSchema>;
+	speaker?:
+		| (Includes<T, "v4"> extends true ? GetSpeakerVoicesType<L> : SpeakersType)
+		| (string & {});
 
 	/**
 	 * Controls the speed of the audio. Range: `0.5 - 2.0`

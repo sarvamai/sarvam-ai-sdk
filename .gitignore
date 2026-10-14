@@ -1,4 +1,4 @@
-# dependencies (bun install)
+# dependencies
 node_modules
 
 # output
@@ -35,7 +35,6 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 bun.lock
 package-lock.json
-*.test.ts
 
 # generated audio/output files
 *.mp3

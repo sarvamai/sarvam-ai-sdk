@@ -1,0 +1,39 @@
+name: Stage Package for Release
+
+on:
+    workflow_dispatch:
+    push:
+        branches: [main]
+        paths:
+            - "package.json"
+            - ".github/workflows/stage.yml"
+
+jobs:
+    stage:
+        runs-on: ubuntu-latest
+
+        permissions:
+            id-token: write
+            contents: read
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v6
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v6
+              with:
+                  node-version: "lts/*"
+                  registry-url: "https://registry.npmjs.org"
+
+            - name: Set up Bun.js
+              uses: oven-sh/setup-bun@v2
+
+            - name: Install dependencies
+              run: bun i
+
+            - name: Test package
+              run: bun run test
+
+            - name: Stage package to npm
+              run: npm stage publish

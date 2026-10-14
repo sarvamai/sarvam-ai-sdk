@@ -1,11 +1,13 @@
 import {
 	InvalidResponseDataError,
-	type LanguageModelV3,
-	type LanguageModelV3CallOptions,
-	type LanguageModelV3Content,
-	type LanguageModelV3FinishReason,
-	type LanguageModelV3StreamPart,
-	type SharedV3Warning,
+	type LanguageModelV4,
+	type LanguageModelV4CallOptions,
+	type LanguageModelV4Content,
+	type LanguageModelV4FinishReason,
+	type LanguageModelV4GenerateResult,
+	type LanguageModelV4StreamPart,
+	type LanguageModelV4StreamResult,
+	type SharedV4Warning,
 } from "@ai-sdk/provider";
 import {
 	combineHeaders,
@@ -21,26 +23,30 @@ import type { z } from "zod";
 import type { SarvamConfig } from "../config";
 import { sarvamFailedResponseHandler } from "../error";
 import { convertToChatMessages } from "./convert-to-chat-messages";
-import { prepareTools } from "./prepare-tools";
 import {
-	type ChatModelId,
+	prepareResponseFormat,
+	prepareResponseFormatAsTool,
+	prepareTools,
+} from "./prepare-tools";
+import {
 	type ChatSettings,
 	chatChunkSchema,
 	chatResponseSchema,
 	chatSettingsSchema,
+	type EveryChatModelId,
 } from "./settings";
 import { getResponseMetadata, mapFinishReason } from "./utils";
 
-export class SarvamChatLanguageModel implements LanguageModelV3 {
-	readonly specificationVersion = "v3";
+export class SarvamChatLanguageModel implements LanguageModelV4 {
+	readonly specificationVersion = "v4";
 
-	readonly modelId: ChatModelId;
+	readonly modelId: EveryChatModelId;
 	readonly settings: ChatSettings;
 
 	private readonly config: SarvamConfig;
 
 	constructor(
-		modelId: ChatModelId,
+		modelId: EveryChatModelId,
 		settings: ChatSettings,
 		config: SarvamConfig,
 	) {
@@ -58,11 +64,7 @@ export class SarvamChatLanguageModel implements LanguageModelV3 {
 		return {};
 	}
 
-	private async getArgs(
-		options: LanguageModelV3CallOptions & {
-			stream: boolean;
-		},
-	) {
+	private async getArgs(options: LanguageModelV4CallOptions, stream: boolean) {
 		const {
 			prompt,
 			maxOutputTokens,
@@ -77,10 +79,10 @@ export class SarvamChatLanguageModel implements LanguageModelV3 {
 			tools,
 			toolChoice,
 			providerOptions,
-			stream,
+			reasoning,
 		} = options;
 
-		const warnings: SharedV3Warning[] = [];
+		const warnings: SharedV4Warning[] = [];
 
 		if (topK) {
 			warnings.push({
@@ -93,6 +95,7 @@ export class SarvamChatLanguageModel implements LanguageModelV3 {
 			provider: "sarvam",
 			providerOptions: {
 				sarvam: {
+					reasoning_effort: reasoning,
 					...providerOptions?.sarvam,
 					...this.settings,
 				},
@@ -100,11 +103,27 @@ export class SarvamChatLanguageModel implements LanguageModelV3 {
 			schema: chatSettingsSchema,
 		});
 
+		const jsonSchemaAsTool =
+			responseFormat?.type === "json" &&
+			!stream &&
+			!this.settings.experimental_json_mode;
+
+		const jsonMode = this.settings.experimental_json_mode && !stream;
+
+		if (jsonMode) {
+			warnings.push({
+				type: "other",
+				message: "Experimental json_mode is enabled",
+			});
+		}
+
 		const baseArgs = {
 			model: this.modelId,
 			messages: convertToChatMessages(prompt),
+			response_format: jsonMode
+				? prepareResponseFormat(responseFormat)
+				: undefined,
 
-			// standardized settings:
 			max_tokens: maxOutputTokens,
 			temperature,
 			top_p: topP,
@@ -114,62 +133,35 @@ export class SarvamChatLanguageModel implements LanguageModelV3 {
 			seed,
 
 			...sarvamOptions,
-
-			response_format:
-				// json object response format is not supported for streaming:
-				stream === false && responseFormat?.type === "json"
-					? { type: "json_object" }
-					: undefined,
 		};
 
-		let toolsArg: ReturnType<typeof prepareTools> | null = null;
-
-		if (tools && tools.length > 0) {
-			toolsArg = prepareTools({
-				tools,
-				toolChoice,
-			});
-		}
-
-		if (responseFormat?.type === "json") {
-			const objectMode = responseFormat;
-			toolsArg = {
-				toolWarnings: [],
-				tool_choice: {
-					type: "function",
-					function: { name: objectMode.name ?? "response" },
-				},
-				tools: [
+		const toolsArg = jsonSchemaAsTool
+			? prepareResponseFormatAsTool(responseFormat)
+			: prepareTools(
 					{
-						type: "function",
-						function: {
-							name: objectMode.name ?? "response",
-							description: objectMode.description,
-							parameters: objectMode.schema,
-						},
+						tools,
+						toolChoice,
 					},
-				],
-			} satisfies ReturnType<typeof prepareTools>;
-		}
+					(w) => warnings.push(w),
+				);
 
 		return {
 			args: {
 				...baseArgs,
-				...(toolsArg ?? {}),
+				...toolsArg,
 			},
-			warnings: [...warnings, ...(toolsArg?.toolWarnings ?? [])],
+			warnings,
+			jsonSchemaAsTool,
 		};
 	}
 
 	async doGenerate(
-		options: LanguageModelV3CallOptions,
-	): Promise<Awaited<ReturnType<LanguageModelV3["doGenerate"]>>> {
-		const { args, warnings } = await this.getArgs({
-			...options,
-			stream: false,
-		});
-
-		const isJSON = options.responseFormat?.type === "json";
+		options: LanguageModelV4CallOptions,
+	): Promise<LanguageModelV4GenerateResult> {
+		const { args, warnings, jsonSchemaAsTool } = await this.getArgs(
+			options,
+			false,
+		);
 
 		const {
 			responseHeaders,
@@ -180,7 +172,7 @@ export class SarvamChatLanguageModel implements LanguageModelV3 {
 				path: "/chat/completions",
 				modelId: this.modelId,
 			}),
-			headers: combineHeaders(this.config.headers(), options.headers),
+			headers: combineHeaders(this.config.headers?.(), options.headers),
 			body: args,
 			failedResponseHandler: sarvamFailedResponseHandler,
 			successfulResponseHandler: createJsonResponseHandler(chatResponseSchema),
@@ -197,7 +189,7 @@ export class SarvamChatLanguageModel implements LanguageModelV3 {
 			});
 		}
 
-		const content: LanguageModelV3Content[] = [];
+		const content: LanguageModelV4Content[] = [];
 
 		if (choice.message.content) {
 			content.push({
@@ -213,28 +205,31 @@ export class SarvamChatLanguageModel implements LanguageModelV3 {
 			});
 		}
 
-		// Add tool calls if present
 		if (choice.message.tool_calls && choice.message.tool_calls.length > 0) {
 			for (const toolCall of choice.message.tool_calls) {
-				if (isJSON)
+				if (jsonSchemaAsTool)
 					content.push({
 						type: "text",
 						text: toolCall.function.arguments,
 					});
-
-				content.push({
-					type: "tool-call",
-					toolCallId: toolCall.id ?? (this.config.generateId ?? generateId)(),
-					toolName: toolCall.function.name,
-					input: toolCall.function.arguments,
-				});
+				else
+					content.push({
+						type: "tool-call",
+						toolCallId: toolCall.id ?? (this.config.generateId ?? generateId)(),
+						toolName: toolCall.function.name,
+						input: toolCall.function.arguments,
+					});
 			}
 		}
+
+		const finishReason = mapFinishReason(choice.finish_reason);
+		const unified =
+			jsonSchemaAsTool && finishReason === "tool-calls" ? "stop" : finishReason;
 
 		return {
 			content,
 			finishReason: {
-				unified: isJSON ? "stop" : mapFinishReason(choice.finish_reason),
+				unified,
 				raw: choice.finish_reason ?? undefined,
 			},
 			usage: {
@@ -273,16 +268,16 @@ export class SarvamChatLanguageModel implements LanguageModelV3 {
 	}
 
 	async doStream(
-		options: LanguageModelV3CallOptions,
-	): Promise<Awaited<ReturnType<LanguageModelV3["doStream"]>>> {
-		const { args } = await this.getArgs({ ...options, stream: true });
+		options: LanguageModelV4CallOptions,
+	): Promise<LanguageModelV4StreamResult> {
+		const { args } = await this.getArgs(options, true);
 
 		const { responseHeaders, value: response } = await postJsonToApi({
 			url: this.config.url({
 				path: "/chat/completions",
 				modelId: this.modelId,
 			}),
-			headers: combineHeaders(this.config.headers(), options.headers),
+			headers: combineHeaders(this.config.headers?.(), options.headers),
 			body: {
 				...args,
 				stream: true,
@@ -301,7 +296,7 @@ export class SarvamChatLanguageModel implements LanguageModelV3 {
 			hasFinished: boolean;
 		}> = [];
 
-		let finishReason: LanguageModelV3FinishReason = {
+		let finishReason: LanguageModelV4FinishReason = {
 			unified: "other",
 			raw: undefined,
 		};
@@ -331,12 +326,14 @@ export class SarvamChatLanguageModel implements LanguageModelV3 {
 			},
 		};
 		let isFirstChunk = true;
+		let isActiveReasoning = false;
+		let isActiveText = false;
 
 		return {
 			stream: response.pipeThrough(
 				new TransformStream<
 					ParseResult<z.infer<typeof chatChunkSchema>>,
-					LanguageModelV3StreamPart
+					LanguageModelV4StreamPart
 				>({
 					transform(chunk, controller) {
 						// handle failed chunk parsing / validation:
@@ -406,8 +403,14 @@ export class SarvamChatLanguageModel implements LanguageModelV3 {
 
 						// Handle reasoning
 						if (delta.reasoning != null && delta.reasoning.length > 0) {
-							// V2 uses reasoning-start, reasoning-delta, reasoning-end pattern
-							// For simplicity, we emit as a single reasoning-delta
+							if (!isActiveReasoning) {
+								controller.enqueue({
+									type: "reasoning-start",
+									id: "reasoning-0",
+								});
+								isActiveReasoning = true;
+							}
+
 							controller.enqueue({
 								type: "reasoning-delta",
 								id: "reasoning-0",
@@ -417,6 +420,23 @@ export class SarvamChatLanguageModel implements LanguageModelV3 {
 
 						// Handle text content
 						if (delta.content != null && delta.content.length > 0) {
+							// the answer has started, so the reasoning is done
+							if (isActiveReasoning) {
+								controller.enqueue({
+									type: "reasoning-end",
+									id: "reasoning-0",
+								});
+								isActiveReasoning = false;
+							}
+
+							if (!isActiveText) {
+								controller.enqueue({
+									type: "text-start",
+									id: "text-0",
+								});
+								isActiveText = true;
+							}
+
 							controller.enqueue({
 								type: "text-delta",
 								id: "text-0",
@@ -426,6 +446,14 @@ export class SarvamChatLanguageModel implements LanguageModelV3 {
 
 						// Handle tool calls
 						if (delta.tool_calls != null) {
+							if (isActiveReasoning) {
+								controller.enqueue({
+									type: "reasoning-end",
+									id: "reasoning-0",
+								});
+								isActiveReasoning = false;
+							}
+
 							for (const toolCallDelta of delta.tool_calls) {
 								const index = toolCallDelta.index;
 
@@ -461,6 +489,12 @@ export class SarvamChatLanguageModel implements LanguageModelV3 {
 									const toolCall = toolCalls[index];
 
 									if (toolCall.name != null && toolCall.arguments != null) {
+										controller.enqueue({
+											type: "tool-input-start",
+											id: toolCall.id,
+											toolName: toolCall.name,
+										});
+
 										// send delta if the argument text has already started:
 										if (toolCall.arguments.length > 0) {
 											controller.enqueue({
@@ -473,6 +507,10 @@ export class SarvamChatLanguageModel implements LanguageModelV3 {
 										// check if tool call is complete
 										// (some providers send the full tool call in one chunk):
 										if (isParsableJson(toolCall.arguments)) {
+											controller.enqueue({
+												type: "tool-input-end",
+												id: toolCall.id,
+											});
 											controller.enqueue({
 												type: "tool-call",
 												toolCallId: toolCall.id,
@@ -511,6 +549,10 @@ export class SarvamChatLanguageModel implements LanguageModelV3 {
 									isParsableJson(toolCall.arguments)
 								) {
 									controller.enqueue({
+										type: "tool-input-end",
+										id: toolCall.id,
+									});
+									controller.enqueue({
 										type: "tool-call",
 										toolCallId: toolCall.id,
 										toolName: toolCall.name,
@@ -523,6 +565,20 @@ export class SarvamChatLanguageModel implements LanguageModelV3 {
 					},
 
 					flush(controller) {
+						if (isActiveReasoning) {
+							controller.enqueue({
+								type: "reasoning-end",
+								id: "reasoning-0",
+							});
+						}
+
+						if (isActiveText) {
+							controller.enqueue({
+								type: "text-end",
+								id: "text-0",
+							});
+						}
+
 						controller.enqueue({
 							type: "finish",
 							finishReason,

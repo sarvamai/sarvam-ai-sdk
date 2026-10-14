@@ -1,7 +1,7 @@
 import type {
-	LanguageModelV3,
-	LanguageModelV3CallOptions,
-	LanguageModelV3Content,
+	LanguageModelV4,
+	LanguageModelV4CallOptions,
+	LanguageModelV4Content,
 } from "@ai-sdk/provider";
 import {
 	combineHeaders,
@@ -13,8 +13,8 @@ import { sarvamFailedResponseHandler } from "../error";
 import { sarvamLidResponseSchema } from "./lid-settings";
 import { convertPromptToInput } from "./utils";
 
-export class SarvamLidModel implements LanguageModelV3 {
-	readonly specificationVersion = "v3";
+export class SarvamLidModel implements LanguageModelV4 {
+	readonly specificationVersion = "v4";
 
 	readonly modelId: "unknown";
 
@@ -35,7 +35,7 @@ export class SarvamLidModel implements LanguageModelV3 {
 	}
 
 	private getArgs(
-		options: LanguageModelV3CallOptions & {
+		options: LanguageModelV4CallOptions & {
 			stream: boolean;
 		},
 	) {
@@ -50,8 +50,8 @@ export class SarvamLidModel implements LanguageModelV3 {
 	}
 
 	async doGenerate(
-		options: LanguageModelV3CallOptions,
-	): Promise<Awaited<ReturnType<LanguageModelV3["doGenerate"]>>> {
+		options: LanguageModelV4CallOptions,
+	): Promise<Awaited<ReturnType<LanguageModelV4["doGenerate"]>>> {
 		const { args } = this.getArgs({
 			...options,
 			stream: false,
@@ -66,7 +66,7 @@ export class SarvamLidModel implements LanguageModelV3 {
 				path: "/text-lid",
 				modelId: this.modelId,
 			}),
-			headers: combineHeaders(this.config.headers(), options.headers),
+			headers: combineHeaders(this.config.headers?.(), options.headers),
 			body: args,
 			failedResponseHandler: sarvamFailedResponseHandler,
 			successfulResponseHandler: createJsonResponseHandler(
@@ -78,7 +78,7 @@ export class SarvamLidModel implements LanguageModelV3 {
 
 		const languageCode = response.language_code ?? undefined;
 
-		const content: LanguageModelV3Content[] = [
+		const content: LanguageModelV4Content[] = [
 			{ type: "text", text: languageCode ?? "unknown" },
 		];
 
@@ -121,8 +121,8 @@ export class SarvamLidModel implements LanguageModelV3 {
 	}
 
 	async doStream(
-		_options: LanguageModelV3CallOptions,
-	): Promise<Awaited<ReturnType<LanguageModelV3["doStream"]>>> {
+		_options: LanguageModelV4CallOptions,
+	): Promise<Awaited<ReturnType<LanguageModelV4["doStream"]>>> {
 		throw new Error(
 			"Language Identification feature doesn't support streaming yet",
 		);

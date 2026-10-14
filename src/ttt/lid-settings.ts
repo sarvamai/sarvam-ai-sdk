@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 import { SarvamLanguageCodeSchema, SarvamScriptCodeSchema } from "../config";
 
 export const sarvamLidResponseSchema = z.object({

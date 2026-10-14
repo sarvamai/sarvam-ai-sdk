@@ -3,18 +3,20 @@ import { z } from "zod";
 /**
  * - `saaras:v3`: State-of-the-art model with 23-language support and flexible output formats.
  *   Supports multiple modes via the mode parameter: transcribe, translate, verbatim, translit, codemix.
+ *
+ * - `saaras:v4`: latest model, adding Global English support (in addition to Indian English) across all output modes while keeping the same 22 Indic language coverage.
  */
-export type TranscriptionModelId = "saaras:v3" | (string & {});
+export type TranscriptionModelId = "saaras:v3" | "saaras:v4" | (string & {});
 
 export const transcriptionProviderOptionsSchema = z.object({
 	mode: z
 		.enum(["transcribe", "translate", "verbatim", "translit", "codemix"])
 		.nullish(),
 	with_timestamps: z.boolean().nullish(),
+	keyterms: z.array(z.string().max(64)).max(50).nullish(),
 });
 
 export type TranscriptionSettings<
-	// biome-ignore lint/correctness/noUnusedVariables: <For Future Models>
 	T extends TranscriptionModelId = TranscriptionModelId,
 > = {
 	/**
@@ -36,6 +38,14 @@ export type TranscriptionSettings<
 	 * Useful for subtitle alignment and audio navigation.
 	 */
 	with_timestamps?: boolean;
+
+	/**
+	 * List of up to 50 domain-specific terms (names, places, brands, technical terms) to bias recognition toward.
+	 * Each keyterm can contain up to 64 characters
+	 *
+	 * They do not guarantee that a term will appear in the transcript
+	 */
+	keyterms?: T extends "saaras:v4" ? string[] : never;
 };
 
 export const transcriptionResponseSchema = z.object({

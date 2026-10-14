@@ -13,8 +13,10 @@ export interface SarvamSystemMessage {
 
 export interface SarvamUserMessage {
 	role: "user";
-	content: string | Array<SarvamContentPart>;
+	content: string; // | Array<SarvamContentPart>;
 }
+
+// Sarvam Chat Models doesn't support file inputs or content array parts as input
 
 export type SarvamContentPart = SarvamContentPartText | SarvamContentPartImage;
 
@@ -48,3 +50,33 @@ export interface SarvamToolMessage {
 	content: string;
 	tool_call_id: string;
 }
+
+export interface SarvamTool {
+	type: "function";
+	function: {
+		name: string;
+		description: string | undefined;
+		parameters: unknown;
+	};
+}
+
+export type SarvamToolChoice =
+	| { type: "function"; function: { name: string } }
+	| "auto"
+	| "none"
+	| "required";
+
+export type SarvamResponseFormat =
+	| {
+			type: "json_schema";
+			json_schema: Partial<{
+				name: string;
+				description: string;
+				schema: object;
+				strict: boolean;
+			}>;
+	  }
+	| {
+			type: "json_object";
+	  }
+	| undefined;
