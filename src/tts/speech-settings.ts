@@ -3,9 +3,12 @@ import { z } from "zod";
 /**
  * Specifies the speech generation model to use.
  *
- * - `bulbul:v3`: Latest model with improved quality, 30+ voices, and temperature control
+ * - `bulbul:v4-flash`: Latest text-to-speech model — 200+ persona voices with natural
+ *   prosody and the same request/response contract as v3.
+ * - `bulbul:v3`: Stable text-to-speech model with 30+ named speakers across 11 languages.
+ *   The API default when `model` is omitted.
  */
-export type SpeechModelId = "bulbul:v3" | (string & {});
+export type SpeechModelId = "bulbul:v4-flash" | "bulbul:v3" | (string & {});
 
 export const SpeakerSchema = z.enum([
 	// male
@@ -85,7 +88,7 @@ export const speechOptionsSchema = z
 	.partial();
 
 /**
- * Configuration settings for Sarvam Text-to-Speech API (bulbul:v3).
+ * Configuration settings for Sarvam Text-to-Speech API (bulbul:v4-flash / bulbul:v3).
  */
 export type SpeechSettings<
 	// biome-ignore lint/correctness/noUnusedVariables: <For Future Models>
