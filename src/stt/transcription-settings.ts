@@ -1,10 +1,13 @@
 import { z } from "zod";
 
 /**
- * - `saaras:v3`: State-of-the-art model with 23-language support and flexible output formats.
- *   Supports multiple modes via the mode parameter: transcribe, translate, verbatim, translit, codemix.
+ * - `saaras:v4`: Latest, default speech-to-text model — 23-language support (22 Indic +
+ *   Global/Indian English), the five output modes via the `mode` parameter (transcribe,
+ *   translate, verbatim, translit, codemix), and `keyterms` prompting.
+ * - `saaras:v3`: Previous model, still available — 23 languages (22 Indic + Indian English)
+ *   with the same output modes as v4, without Global English.
  */
-export type TranscriptionModelId = "saaras:v3" | (string & {});
+export type TranscriptionModelId = "saaras:v4" | "saaras:v3" | (string & {});
 
 export const transcriptionProviderOptionsSchema = z.object({
 	mode: z
