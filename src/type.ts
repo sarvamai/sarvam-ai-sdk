@@ -1,4 +1,5 @@
 import type {
+	Experimental_DecisionModelV4 as DecisionModelV4,
 	LanguageModelV4,
 	SpeechModelV4,
 	TranscriptionModelV4,
@@ -6,6 +7,7 @@ import type {
 
 import type { ChatSettings, EveryChatModelId } from "./chat/settings";
 import type { MoreSarvamLanguageCode, SarvamLanguageCode } from "./config";
+import type { SarvamDecisionModelId } from "./decision/decision-settings";
 import type {
 	TranscriptionModelId,
 	TranscriptionSettings,
@@ -140,4 +142,22 @@ export type SarvamProvider = {
 	 *	});
 	 */
 	languageIdentification(): LanguageModelV4;
+
+	/**
+	 * Creates a Sarvam decision model for answering typed questions about a shared state.
+	 *
+	 * @example
+	 * 	const { answers } = await experimental_decide({
+	 *		model: sarvam.decisionModel("sarvam-prism"),
+	 *		state: "My Razorpay integration stopped working and all checkout payments are failing.",
+	 *		questions: {
+	 *			department: {
+	 *				type: "choice",
+	 *				instructions: "Which team should handle this?",
+	 *				criteria: { billing: "Payments or invoices", technical: "Bugs or outages" },
+	 *			},
+	 *		},
+	 *	});
+	 */
+	decisionModel(modelId: SarvamDecisionModelId): DecisionModelV4;
 };

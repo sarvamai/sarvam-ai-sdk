@@ -56,6 +56,7 @@ Auth comes from `SARVAM_API_KEY` unless `apiKey` is passed. The provider sends t
 | `sarvam.translation(modelId, { from, to, … })` | `LanguageModelV4` | `generateText` only |
 | `sarvam.transliterate({ to, from? })` | `LanguageModelV4` | `generateText` only |
 | `sarvam.languageIdentification()` | `LanguageModelV4` | `generateText` only |
+| `sarvam.decisionModel(modelId)` | `DecisionModelV4` | `decide` |
 
 ```ts
 import { sarvam } from "sarvam-ai-sdk";
@@ -67,6 +68,31 @@ sarvam.transcription("saaras:v4");                  // language defaults to "unk
 sarvam.translation("mayura:v1", { from: "hi-IN", to: "en-IN" });
 sarvam.transliterate({ to: "ml-IN", from: "en-IN" });
 sarvam.languageIdentification();
+sarvam.decisionModel("sarvam-prism");               // decide (choice, score, boolean)
+```
+
+Decisions (`experimental_decide` from `ai`) answer typed questions about one shared state:
+
+```ts
+import { experimental_decide as decide } from "ai";
+import { sarvam } from "sarvam-ai-sdk";
+
+const { answers } = await decide({
+  model: sarvam.decisionModel("sarvam-prism"),
+  state: "My Razorpay integration stopped working and all checkout payments are failing.",
+  questions: {
+    department: {
+      type: "choice",
+      instructions: "Which team should handle this?",
+      criteria: { billing: "Payments or invoices", sales: "New business enquiries", technical: "Bugs or outages" },
+    },
+    severity: { type: "score", instructions: "Rate the severity.", criteria: ["trivial", "minor", "moderate", "major", "critical"] },
+    urgent: { type: "boolean", instructions: "Is this urgent and revenue-impacting?" },
+  },
+});
+
+answers.department.choice;        // "billing" | "sales" | "technical"
+answers.urgent.probability;       // P(yes) in [0, 1]
 ```
 
 Supported language codes are the BCP-47 Indian set (`hi-IN`, `bn-IN`, `ta-IN`, `ml-IN`, `en-IN`, …) plus an extended set for translation/transcription; `"unknown"` means auto-detect for transcription.
@@ -112,6 +138,7 @@ Also exports `SarvamTranscriptionModelInfo`, `SarvamSpeechModelInfo`, `SarvamTra
 | **Reasoning is on by default** | Sarvam chat models think before answering. `reasoning_effort` accepts `"none" \| "low" \| "medium" \| "high"` (`"none"` is sent as `null` to disable). Low `maxOutputTokens` can let reasoning eat the whole budget and leave `text` empty. See the chat skill. |
 | **This package is REST-only for speech** | `speech` and `transcription` call the REST endpoints. There is no Batch API, WebSocket streaming, diarization job, or dubbing surface here — use the raw `sarvamai` SDK for those. |
 | **Translation / transliteration / LID don't stream** | Their `doStream()` throws. Use `generateText`, never `streamText`. Chat is the only streaming model. |
+| **Decisions are text/JSON only** | `sarvam.decisionModel` supports `choice`, `score`, and `boolean` questions. `box` questions and file (image) parts in `state` throw `UnsupportedFunctionalityError`. Boolean maps to Sarvam's yes/no question and returns `probability`. |
 
 ## Related skills
 

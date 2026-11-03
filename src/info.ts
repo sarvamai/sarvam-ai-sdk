@@ -1,4 +1,5 @@
 import type { ChatModelId, OpenWeightModelId } from "./chat/settings";
+import type { SarvamDecisionModelId } from "./decision/decision-settings";
 import type { TranscriptionModelId } from "./stt/transcription-settings";
 import type { SpeechModelId } from "./tts/speech-settings";
 import type { TranslationModelId } from "./ttt/translation-settings";
@@ -142,6 +143,28 @@ export const SarvamTranslationModelInfo = {
 	TranslationModelId,
 	{
 		max_input_length: number;
+	}
+>;
+
+/**
+ * Limits of Sarvam decision models.
+ *
+ * - max_tokens_per_question: maximum tokens (state + question + options) for a single question
+ * - max_options: maximum number of options in a choice question
+ * - max_score_levels: maximum number of levels in a score question
+ */
+export const SarvamDecisionModelInfo = {
+	"sarvam-prism": {
+		max_tokens_per_question: 32_768,
+		max_options: 255,
+		max_score_levels: 10,
+	},
+} as const satisfies Record<
+	SarvamDecisionModelId,
+	{
+		max_tokens_per_question: number;
+		max_options: number;
+		max_score_levels: number;
 	}
 >;
 

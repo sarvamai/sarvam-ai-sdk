@@ -142,6 +142,46 @@ const result = await generateText({
 console.log(result.text); // ml-IN
 ```
 
+## Decision Models
+
+Answers choice, score, and yes/no questions about one input with calibrated probabilities and generates no text.
+
+> NB: Supports `choice`, `score`, and `boolean` questions. `box` questions and image parts in `state` are not supported.
+
+```ts
+import { experimental_decide as decide } from "ai";
+import { sarvam } from "sarvam-ai-sdk";
+
+const { answers } = await decide({
+	model: sarvam.decisionModel("sarvam-prism"),
+	state: "അയ്യോ, എൻ്റെ പൈസ ആരോ അടിച്ചു കൊണ്ടു പോയേ",
+	questions: {
+		department: {
+			type: "choice",
+			instructions: "Which team should handle this?",
+			criteria: {
+				billing: "Payments or invoices",
+				sales: "New business enquiries",
+				technical: "Bugs or outages",
+			},
+		},
+		severity: {
+			type: "score",
+			instructions: "Rate the severity.",
+			criteria: ["trivial", "minor", "moderate", "major", "critical"],
+		},
+		urgent: {
+			type: "boolean",
+			instructions: "Is this urgent and revenue-impacting?",
+		},
+	},
+});
+
+console.log(answers.department.choice); // "billing"
+console.log(answers.severity.score); // 2.301...
+console.log(answers.urgent.probability); // 0.768...
+```
+
 ## Tool Calling
 
 ```ts
@@ -242,6 +282,9 @@ sarvam.translation("mayura:v1", { from: "en-IN", to: "ml-IN" });
 
 // Text-to-Text + Language identification
 sarvam.languageIdentification();
+
+// State-to-Decision + Probabilities score
+sarvam.decisionModel("sarvam-prism");
 
 // Text-to-Speech
 sarvam.speech("bulbul:v3", "ml-IN");

@@ -1,6 +1,7 @@
 import { loadApiKey, withoutTrailingSlash } from "@ai-sdk/provider-utils";
 import { SarvamChatLanguageModel } from "./chat/language-model";
 import type { SarvamProviderSettings } from "./config";
+import { SarvamDecisionModel } from "./decision/decision-model";
 import { SarvamTranscriptionModel } from "./stt/transcription-model";
 import { SarvamSpeechModel } from "./tts/speech-model";
 import { SarvamLidModel } from "./ttt/lid-model";
@@ -98,6 +99,14 @@ export function createSarvam(options: SarvamProviderSettings = {}) {
 	provider.languageIdentification = () =>
 		new SarvamLidModel({
 			provider: "sarvam.lid",
+			url: ({ path }) => `${baseURL}${path}`,
+			headers: getHeaders,
+			fetch: options.fetch,
+		});
+
+	provider.decisionModel = (modelId) =>
+		new SarvamDecisionModel(modelId, {
+			provider: "sarvam.decision",
 			url: ({ path }) => `${baseURL}${path}`,
 			headers: getHeaders,
 			fetch: options.fetch,
