@@ -152,12 +152,14 @@ export class SarvamChatLanguageModel implements LanguageModelV3 {
 			} satisfies ReturnType<typeof prepareTools>;
 		}
 
+		const { toolWarnings = [], ...toolArgs } = toolsArg ?? {};
+
 		return {
 			args: {
 				...baseArgs,
-				...(toolsArg ?? {}),
+				...toolArgs,
 			},
-			warnings: [...warnings, ...(toolsArg?.toolWarnings ?? [])],
+			warnings: [...warnings, ...toolWarnings],
 		};
 	}
 
