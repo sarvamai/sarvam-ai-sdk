@@ -22,10 +22,12 @@ export type ChatSettings = {
 	wiki_grounding?: boolean;
 
 	/**
-	 * How many chat completion choices to generate for each input message.
+	 * Number of chat completion choices to generate.
 	 *
-	 * Note that you will be charged based on the number of generated tokens across all of the choices.
-	 * Keep `n` as `1` to minimize costs.
+	 * @deprecated Sarvam returns exactly one completion per request. Since 2026-11-07
+	 * the API rejects `n` greater than `1` with `400 invalid_request_error` on both
+	 * `/v1` and `/v2`. Leave this unset or set it to `1`; send separate requests to get
+	 * several completions.
 	 */
 	n?: number;
 };
@@ -33,7 +35,7 @@ export type ChatSettings = {
 export const chatSettingsSchema = z.object({
 	reasoning_effort: z.enum(["low", "medium", "high"]).nullish(),
 	wiki_grounding: z.boolean().nullish(),
-	n: z.number().min(1).max(128).nullish(),
+	n: z.number().min(1).max(1).nullish(),
 });
 
 export const chatResponseSchema = z.object({
