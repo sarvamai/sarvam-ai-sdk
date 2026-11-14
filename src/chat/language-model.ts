@@ -152,12 +152,15 @@ export class SarvamChatLanguageModel implements LanguageModelV3 {
 			} satisfies ReturnType<typeof prepareTools>;
 		}
 
+		const { toolWarnings: pendingWarnings = [], ...requestPayload } =
+			toolsArg ?? {};
+
 		return {
 			args: {
 				...baseArgs,
-				...(toolsArg ?? {}),
+				...requestPayload,
 			},
-			warnings: [...warnings, ...(toolsArg?.toolWarnings ?? [])],
+			warnings: [...warnings, ...pendingWarnings],
 		};
 	}
 
@@ -373,16 +376,17 @@ export class SarvamChatLanguageModel implements LanguageModelV3 {
 							}
 						}
 
-						if (value.x_sarvam?.usage != null) {
+						const usageSource = value.usage ?? value.x_sarvam?.usage;
+						if (usageSource != null) {
 							usage = {
 								inputTokens: {
-									total: value.x_sarvam.usage.prompt_tokens ?? undefined,
+									total: usageSource.prompt_tokens ?? undefined,
 									noCache: undefined,
 									cacheRead: undefined,
 									cacheWrite: undefined,
 								},
 								outputTokens: {
-									total: value.x_sarvam.usage.completion_tokens ?? undefined,
+									total: usageSource.completion_tokens ?? undefined,
 									text: undefined,
 									reasoning: undefined,
 								},

@@ -106,6 +106,12 @@ export const chatChunkSchema = z.union([
 				index: z.number(),
 			}),
 		),
+		usage: z
+			.object({
+				prompt_tokens: z.number().nullish(),
+				completion_tokens: z.number().nullish(),
+			})
+			.nullish(),
 		x_sarvam: z
 			.object({
 				usage: z

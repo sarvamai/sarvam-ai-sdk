@@ -83,11 +83,17 @@ export class SarvamTranslationModel implements LanguageModelV3 {
 				);
 		}
 
+		const {
+			from: _sourceCode,
+			to: _targetCode,
+			...remainingOptions
+		} = sarvamOptions;
+
 		return {
 			args: {
 				input: convertPromptToInput(prompt),
 				model: this.modelId,
-				...sarvamOptions,
+				...remainingOptions,
 				source_language_code: from,
 				target_language_code: to,
 			},
