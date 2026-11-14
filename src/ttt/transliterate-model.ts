@@ -72,10 +72,16 @@ export class SarvamTransliterateModel implements LanguageModelV3 {
 					);
 		}
 
+		const {
+			from: _sourceCode,
+			to: _targetCode,
+			...remainingOptions
+		} = sarvamOptions;
+
 		return {
 			args: {
 				input: convertPromptToInput(prompt),
-				...sarvamOptions,
+				...remainingOptions,
 				source_language_code: from,
 				target_language_code: to,
 				spoken_form_numerals_language: sarvamOptions.spoken_form
