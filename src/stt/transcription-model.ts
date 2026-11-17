@@ -1,6 +1,7 @@
 import type {
 	TranscriptionModelV4,
 	TranscriptionModelV4CallOptions,
+	TranscriptionModelV4Result,
 } from "@ai-sdk/provider";
 import {
 	combineHeaders,
@@ -132,15 +133,28 @@ export class SarvamTranscriptionModel implements TranscriptionModelV4 {
 			fetch: this.config.fetch,
 		});
 
+		let segments: TranscriptionModelV4Result["segments"] = [];
+
+		if (response.diarized_transcript)
+			segments = response.diarized_transcript.entries.map((e) => ({
+				text: e.transcript,
+				speakerId: e.speaker_id,
+				startSecond: e.start_time_seconds,
+				endSecond: e.end_time_seconds,
+			}));
+		else if (response.timestamps) {
+			segments = response.timestamps.words.flatMap((text, i) => [
+				{
+					text,
+					startSecond: response.timestamps?.start_time_seconds[i] ?? 0,
+					endSecond: response.timestamps?.end_time_seconds[i] ?? 0,
+				},
+			]);
+		}
+
 		return {
 			text: response.transcript,
-			segments:
-				response.diarized_transcript?.entries.map((e) => ({
-					text: e.transcript,
-					speakerId: e.speaker_id,
-					startSecond: e.start_time_seconds,
-					endSecond: e.end_time_seconds,
-				})) ?? [],
+			segments,
 			language: response.language_code ?? undefined,
 			durationInSeconds:
 				response.timestamps?.end_time_seconds[

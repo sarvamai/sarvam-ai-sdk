@@ -9,12 +9,16 @@ console.log("Test 1: Basic transcription (English)");
 const test1 = await transcribe({
 	model: sarvam.transcription("saaras:v4", "en-IN", {
 		keyterms: ["pachakam"],
+		with_timestamps: true,
 	}),
 	audio: audioBuffer,
 });
 console.log("Result:", test1.text);
 console.log("Language:", test1.language);
+console.log("Language:", test1.segments);
 console.log("---\n");
+
+throw new Error();
 
 // Test 2: Transcription with translate mode
 console.log("Test 2: Transcription with translate mode");
