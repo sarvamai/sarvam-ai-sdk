@@ -5,20 +5,24 @@ import { sarvamErrorDataSchema } from "../error";
  * @description Production models
  * @see https://docs.sarvam.ai/api-reference-docs/chat/chat-completions
  */
-export type ChatModelId =
-	| "sarvam-105b"
-	| "sarvam-105b-conversations"
-	| (string & {});
+export type SarvamChatModelId = "sarvam-105b" | "sarvam-105b-conversations";
 
 /**
  * @description Open weight models
- * @see https://docs.sarvam.ai/api/getting-started/models/openweight
+ * @see https://docs.sarvam.ai/api/token-factory/models
  */
-export type OpenWeightModelId = "glm5.3" | "gemma4" | "deepseekv4-flash";
+export type OpenWeightModelId =
+	| "glm5.3"
+	| "glm5.3-flash"
+	| "qwen38-27b"
+	| "gemma4"
+	| "kimi-k3.1-pro"
+	| "deepseekv4-pro"
+	| "deepseekv4.1-flash-1017";
 
-export type EveryChatModelId = ChatModelId; // | OpenWeightModelId
+export type ChatModelId = SarvamChatModelId | OpenWeightModelId | (string & {});
 
-export type ChatSettings<T extends EveryChatModelId = EveryChatModelId> = {
+export type ChatSettings<T extends ChatModelId = ChatModelId> = {
 	/**
 	 * Alongside its own models, Sarvam serves a small set of open-weight models.
 	 *
@@ -26,7 +30,7 @@ export type ChatSettings<T extends EveryChatModelId = EveryChatModelId> = {
 	 *
 	 * Sarvam chat models are on v1.
 	 *
-	 * @see https://docs.sarvam.ai/api/getting-started/models/openweight
+	 * @see https://docs.sarvam.ai/api/token-factory/models
 	 *
 	 * @default "v1"
 	 */

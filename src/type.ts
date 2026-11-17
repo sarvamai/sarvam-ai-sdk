@@ -5,9 +5,9 @@ import type {
 	TranscriptionModelV4,
 } from "@ai-sdk/provider";
 
-import type { ChatSettings, EveryChatModelId } from "./chat/settings";
+import type { ChatModelId, ChatSettings } from "./chat/settings";
 import type { MoreSarvamLanguageCode, SarvamLanguageCode } from "./config";
-import type { SarvamDecisionModelId } from "./decision/decision-settings";
+import type { DecisionModelId } from "./decision/decision-settings";
 import type {
 	TranscriptionModelId,
 	TranscriptionSettings,
@@ -29,7 +29,7 @@ export type SarvamProvider = {
 	 * 		prompt: "Translate this to malayalam: 'Keep cooking, guys'",
 	 * 	});
 	 */
-	<T extends EveryChatModelId>(
+	<T extends ChatModelId>(
 		modelId: T,
 		settings?: ChatSettings<T>,
 	): LanguageModelV4;
@@ -43,7 +43,7 @@ export type SarvamProvider = {
 	 * 		prompt: "Translate this to malayalam: 'Keep cooking, guys'",
 	 * 	});
 	 */
-	languageModel<T extends EveryChatModelId>(
+	languageModel<T extends ChatModelId>(
 		modelId: T,
 		settings?: ChatSettings<T>,
 	): LanguageModelV4;
@@ -57,7 +57,7 @@ export type SarvamProvider = {
 	 * 		prompt: "Translate this to malayalam: 'Keep cooking, guys'",
 	 * 	});
 	 */
-	chat<T extends EveryChatModelId>(
+	chat<T extends ChatModelId>(
 		modelId: T,
 		settings?: ChatSettings<T>,
 	): LanguageModelV4;
@@ -159,5 +159,5 @@ export type SarvamProvider = {
 	 *		},
 	 *	});
 	 */
-	decisionModel(modelId: SarvamDecisionModelId): DecisionModelV4;
+	decisionModel(modelId: DecisionModelId): DecisionModelV4;
 };

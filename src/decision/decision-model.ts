@@ -12,7 +12,7 @@ import {
 import type { SarvamConfig } from "../config";
 import { sarvamFailedResponseHandler } from "../error";
 import {
-	type SarvamDecisionModelId,
+	type DecisionModelId,
 	sarvamDecisionResponseSchema,
 } from "./decision-settings";
 import { convertQuestions, convertState } from "./utils";
@@ -20,13 +20,13 @@ import { convertQuestions, convertState } from "./utils";
 export class SarvamDecisionModel implements DecisionModelV4 {
 	readonly specificationVersion = "v4";
 
-	readonly modelId: SarvamDecisionModelId;
+	readonly modelId: DecisionModelId;
 
 	readonly supportedQuestionTypes = ["choice", "score", "boolean"] as const;
 
 	private readonly config: SarvamConfig;
 
-	constructor(modelId: SarvamDecisionModelId, config: SarvamConfig) {
+	constructor(modelId: DecisionModelId, config: SarvamConfig) {
 		this.modelId = modelId;
 		this.config = config;
 	}

@@ -1,11 +1,16 @@
 import { z } from "zod";
 
+export type SarvamDecisionModelId = "sarvam-prism";
+
+export type OpenWeightDecisionModelId = "clef";
+
 /**
  * Specifies the decision model to use.
- *
- * - `sarvam-prism`: Answers choice, score, and yes/no questions about one input with calibrated probabilities.
  */
-export type SarvamDecisionModelId = "sarvam-prism" | (string & {});
+export type DecisionModelId =
+	| SarvamDecisionModelId
+	| OpenWeightDecisionModelId
+	| (string & {});
 
 const probabilitiesSchema = z.record(z.string(), z.number());
 

@@ -44,7 +44,6 @@
 - The provider sends the key as both `Authorization: Bearer` and `api-subscription-key`; auth comes from `SARVAM_API_KEY` unless `apiKey` is passed.
 - `bun run build` must succeed for published behavior: `dist/` is the package output, and `package.json` exports only `.` and `./info`. Never edit `dist/` by hand.
 - Most tracked files are checked out with CRLF while Biome expects LF, so `biome check` reports many pre-existing formatting errors on a clean tree. Do not bulk-run `biome format --write`/`--write` across the repo; it creates huge line-ending diffs.
-- `src/info.ts` has an unused `OpenWeightModelInfo` constant (open-weight IDs are also commented out of `EveryChatModelId`); this is known and produces a Biome warning.
 - Node >= 22 is required.
 
 ## Testing

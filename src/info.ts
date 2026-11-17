@@ -1,5 +1,8 @@
-import type { ChatModelId, OpenWeightModelId } from "./chat/settings";
-import type { SarvamDecisionModelId } from "./decision/decision-settings";
+import type { OpenWeightModelId, SarvamChatModelId } from "./chat/settings";
+import type {
+	OpenWeightDecisionModelId,
+	SarvamDecisionModelId,
+} from "./decision/decision-settings";
 import type { TranscriptionModelId } from "./stt/transcription-settings";
 import type { SpeechModelId } from "./tts/speech-settings";
 import type { TranslationModelId } from "./ttt/translation-settings";
@@ -31,7 +34,7 @@ export const SarvamChatModelInfo = {
 		},
 	},
 } as const satisfies Record<
-	ChatModelId,
+	SarvamChatModelId,
 	{
 		context_window: number;
 		max_completions: number;
@@ -49,7 +52,7 @@ export const SarvamChatModelInfo = {
  * - context_window: maximum number of tokens the model can handle read
  * - max_tokens: maximum number of tokens
  */
-const OpenWeightModelInfo = {
+export const OpenWeightModelInfo = {
 	gemma4: {
 		context_window: 131_072,
 	},
@@ -57,9 +60,23 @@ const OpenWeightModelInfo = {
 		context_window: 1_048_576,
 		max_tokens: 2048,
 	},
-	"deepseekv4-flash": {
+	"glm5.3-flash": {
 		context_window: 1_048_576,
 		max_tokens: 2048,
+	},
+	"deepseekv4-pro": {
+		context_window: 1_048_576,
+		max_tokens: 2048,
+	},
+	"deepseekv4.1-flash-1017": {
+		context_window: 1_048_576,
+		max_tokens: 2048,
+	},
+	"qwen38-27b": {
+		context_window: 262_144,
+	},
+	"kimi-k3.1-pro": {
+		context_window: 1_048_576,
 	},
 } as const satisfies Record<
 	OpenWeightModelId,
@@ -152,12 +169,14 @@ export const SarvamTranslationModelInfo = {
  * - max_tokens_per_question: maximum tokens (state + question + options) for a single question
  * - max_options: maximum number of options in a choice question
  * - max_score_levels: maximum number of levels in a score question
+ * - support_image: does support image as input
  */
 export const SarvamDecisionModelInfo = {
 	"sarvam-prism": {
 		max_tokens_per_question: 32_768,
 		max_options: 255,
 		max_score_levels: 10,
+		support_image: false,
 	},
 } as const satisfies Record<
 	SarvamDecisionModelId,
@@ -165,6 +184,32 @@ export const SarvamDecisionModelInfo = {
 		max_tokens_per_question: number;
 		max_options: number;
 		max_score_levels: number;
+		support_image: boolean;
+	}
+>;
+
+/**
+ * Limits of Open Weight models served by Sarvam on /v2
+ *
+ * - max_tokens_per_question: maximum tokens (state + question + options) for a single question
+ * - max_options: maximum number of options in a choice question
+ * - max_score_levels: maximum number of levels in a score question
+ * - support_image: does support image as input
+ */
+export const OpenWeightDecisionModelInfo = {
+	clef: {
+		max_tokens_per_question: 65_536,
+		max_options: 255,
+		max_score_levels: 10,
+		support_image: true,
+	},
+} as const satisfies Record<
+	OpenWeightDecisionModelId,
+	{
+		max_tokens_per_question: number;
+		max_options: number;
+		max_score_levels: number;
+		support_image: boolean;
 	}
 >;
 
