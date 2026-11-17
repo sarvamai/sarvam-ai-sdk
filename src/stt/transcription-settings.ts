@@ -1,3 +1,7 @@
+import {
+	lazySchema,
+	zodSchema,
+} from "@ai-sdk/provider-utils";
 import { z } from "zod";
 
 /**
@@ -8,13 +12,17 @@ import { z } from "zod";
  */
 export type TranscriptionModelId = "saaras:v3" | "saaras:v4" | (string & {});
 
-export const transcriptionProviderOptionsSchema = z.object({
-	mode: z
-		.enum(["transcribe", "translate", "verbatim", "translit", "codemix"])
-		.nullish(),
-	with_timestamps: z.boolean().nullish(),
-	keyterms: z.array(z.string().max(64)).max(50).nullish(),
-});
+export const transcriptionProviderOptionsSchema = lazySchema(() =>
+	zodSchema(
+		z.object({
+			mode: z
+				.enum(["transcribe", "translate", "verbatim", "translit", "codemix"])
+				.nullish(),
+			with_timestamps: z.boolean().nullish(),
+			keyterms: z.array(z.string().max(64)).max(50).nullish(),
+		}),
+	),
+);
 
 export type TranscriptionSettings<
 	T extends TranscriptionModelId = TranscriptionModelId,
@@ -48,28 +56,32 @@ export type TranscriptionSettings<
 	keyterms?: T extends "saaras:v4" ? string[] : never;
 };
 
-export const transcriptionResponseSchema = z.object({
-	request_id: z.string().nullish(),
-	transcript: z.string(),
-	language_code: z.string().nullish(),
-	language_probability: z.number().nullish(),
-	timestamps: z
-		.object({
-			words: z.array(z.string()),
-			start_time_seconds: z.array(z.number()),
-			end_time_seconds: z.array(z.number()),
-		})
-		.nullish(),
-	diarized_transcript: z
-		.object({
-			entries: z.array(
-				z.object({
-					end_time_seconds: z.number(),
-					start_time_seconds: z.number(),
-					transcript: z.string(),
-					speaker_id: z.string(),
-				}),
-			),
-		})
-		.nullish(),
-});
+export const transcriptionResponseSchema = lazySchema(() =>
+	zodSchema(
+		z.object({
+			request_id: z.string().nullish(),
+			transcript: z.string(),
+			language_code: z.string().nullish(),
+			language_probability: z.number().nullish(),
+			timestamps: z
+				.object({
+					words: z.array(z.string()),
+					start_time_seconds: z.array(z.number()),
+					end_time_seconds: z.array(z.number()),
+				})
+				.nullish(),
+			diarized_transcript: z
+				.object({
+					entries: z.array(
+						z.object({
+							end_time_seconds: z.number(),
+							start_time_seconds: z.number(),
+							transcript: z.string(),
+							speaker_id: z.string(),
+						}),
+					),
+				})
+				.nullish(),
+		}),
+	),
+);

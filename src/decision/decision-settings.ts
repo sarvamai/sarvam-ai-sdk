@@ -1,3 +1,4 @@
+import { lazySchema, zodSchema } from "@ai-sdk/provider-utils";
 import { z } from "zod";
 
 export type SarvamDecisionModelId = "sarvam-prism";
@@ -34,13 +35,17 @@ export const sarvamDecisionAnswerSchema = z.discriminatedUnion("type", [
 	}),
 ]);
 
-export const sarvamDecisionResponseSchema = z.object({
-	model: z.string().nullish(),
-	answers: z.record(z.string(), sarvamDecisionAnswerSchema),
-	usage: z
-		.object({
-			input_tokens: z.number().nullish(),
-			output_tokens: z.number().nullish(),
-		})
-		.nullish(),
-});
+export const sarvamDecisionResponseSchema = lazySchema(() =>
+	zodSchema(
+		z.object({
+			model: z.string().nullish(),
+			answers: z.record(z.string(), sarvamDecisionAnswerSchema),
+			usage: z
+				.object({
+					input_tokens: z.number().nullish(),
+					output_tokens: z.number().nullish(),
+				})
+				.nullish(),
+		}),
+	),
+);

@@ -1,3 +1,4 @@
+import { lazySchema, zodSchema } from "@ai-sdk/provider-utils";
 import { z } from "zod";
 import type { SarvamLanguageCode } from "@/config";
 import type { Includes } from "@/utils";
@@ -19,25 +20,40 @@ export const outputAudioCodecSchema = z.enum([
 	"wav",
 ]);
 
+export type SpeechSampleRate =
+	| 8000
+	| 16000
+	| 22050
+	| 24000
+	| 32000
+	| 44100
+	| 48000;
+
 // https://docs.sarvam.ai/api-reference-docs/text-to-speech/convert
-export const speechOptionsSchema = z
-	.object({
-		speaker: z.string().transform((val) => (val === "" ? undefined : val)),
-		pace: z.number().min(0.5).max(2.0),
-		speech_sample_rate: z.union([
-			z.literal(8000),
-			z.literal(16000),
-			z.literal(22050),
-			z.literal(24000),
-			z.literal(32000),
-			z.literal(44100),
-			z.literal(48000),
-		]),
-		output_audio_codec: outputAudioCodecSchema,
-		temperature: z.number().min(0.01).max(2),
-		dict_id: z.string(),
-	})
-	.partial();
+export const speechOptionsSchema = lazySchema(() =>
+	zodSchema(
+		z
+			.object({
+				speaker: z
+					.string()
+					.transform((val) => (val === "" ? undefined : val)),
+				pace: z.number().min(0.5).max(2.0),
+				speech_sample_rate: z.union([
+					z.literal(8000),
+					z.literal(16000),
+					z.literal(22050),
+					z.literal(24000),
+					z.literal(32000),
+					z.literal(44100),
+					z.literal(48000),
+				]),
+				output_audio_codec: outputAudioCodecSchema,
+				temperature: z.number().min(0.01).max(2),
+				dict_id: z.string(),
+			})
+			.partial(),
+	),
+);
 
 /**
  * Configuration settings for Sarvam Text-to-Speech API (bulbul:v3).
@@ -70,9 +86,7 @@ export type SpeechSettings<
 	 *
 	 * @default 24000
 	 */
-	speech_sample_rate?: z.infer<
-		(typeof speechOptionsSchema)["shape"]["speech_sample_rate"]
-	>;
+	speech_sample_rate?: SpeechSampleRate;
 
 	/**
 	 * Specifies the audio codec for the output audio file.
@@ -97,7 +111,11 @@ export type SpeechSettings<
 	dict_id?: string;
 };
 
-export const speechResponseSchema = z.object({
-	request_id: z.string().nullish(),
-	audios: z.array(z.string()),
-});
+export const speechResponseSchema = lazySchema(() =>
+	zodSchema(
+		z.object({
+			request_id: z.string().nullish(),
+			audios: z.array(z.string()),
+		}),
+	),
+);

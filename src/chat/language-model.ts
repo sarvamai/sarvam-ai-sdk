@@ -19,7 +19,6 @@ import {
 	parseProviderOptions,
 	postJsonToApi,
 } from "@ai-sdk/provider-utils";
-import type { z } from "zod";
 import type { SarvamConfig } from "../config";
 import { sarvamFailedResponseHandler } from "../error";
 import { convertToChatMessages } from "./convert-to-chat-messages";
@@ -29,6 +28,7 @@ import {
 	prepareTools,
 } from "./prepare-tools";
 import {
+	type ChatChunk,
 	type ChatModelId,
 	type ChatSettings,
 	chatChunkSchema,
@@ -332,7 +332,7 @@ export class SarvamChatLanguageModel implements LanguageModelV4 {
 		return {
 			stream: response.pipeThrough(
 				new TransformStream<
-					ParseResult<z.infer<typeof chatChunkSchema>>,
+					ParseResult<ChatChunk>,
 					LanguageModelV4StreamPart
 				>({
 					transform(chunk, controller) {

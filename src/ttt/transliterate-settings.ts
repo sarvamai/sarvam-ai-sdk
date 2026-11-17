@@ -1,3 +1,4 @@
+import { lazySchema, zodSchema } from "@ai-sdk/provider-utils";
 import { z } from "zod";
 import { type SarvamLanguageCode, SarvamLanguageCodeSchema } from "../config";
 
@@ -58,16 +59,26 @@ export type TransliterateSettings<
 	spoken_form_numerals_language?: "english" | "native";
 };
 
-export const transliterateSettingsSchema = z.object({
-	from: z.union([SarvamLanguageCodeSchema, z.literal("auto")]).default("auto"),
-	to: SarvamLanguageCodeSchema,
-	numerals_format: z.enum(["native", "international"]).nullish(),
-	spoken_form: z.boolean().nullish(),
-	spoken_form_numerals_language: z.enum(["english", "native"]).nullish(),
-});
+export const transliterateSettingsSchema = lazySchema(() =>
+	zodSchema(
+		z.object({
+			from: z
+				.union([SarvamLanguageCodeSchema, z.literal("auto")])
+				.default("auto"),
+			to: SarvamLanguageCodeSchema,
+			numerals_format: z.enum(["native", "international"]).nullish(),
+			spoken_form: z.boolean().nullish(),
+			spoken_form_numerals_language: z.enum(["english", "native"]).nullish(),
+		}),
+	),
+);
 
-export const transliterateResponseSchema = z.object({
-	transliterated_text: z.string().nullish(),
-	source_language_code: SarvamLanguageCodeSchema.nullish(),
-	request_id: z.string().nullish(),
-});
+export const transliterateResponseSchema = lazySchema(() =>
+	zodSchema(
+		z.object({
+			transliterated_text: z.string().nullish(),
+			source_language_code: SarvamLanguageCodeSchema.nullish(),
+			request_id: z.string().nullish(),
+		}),
+	),
+);
